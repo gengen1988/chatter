@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- bower:css -->
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+  <!-- endbower -->
+  <!-- <link rel="stylesheet" href="css/style.css"> -->
+</head>
+<body ng-app="app">
+
+  <div class="container" ng-controller="ChatController as chat">
+    <h1>说两句吧</h1>
+    <form ng-submit="chat.say(text); text = null">
+      <div class="form-group">
+        <div class="input-group">
+          <input placeholder="这里不记录历史，请便" class="form-control" ng-model="text">
+          <span class="input-group-btn">
+            <button class="btn btn-default">提交</button>
+          </span>
+        </div>
+      </div>
+    </form>
+    <ul>
+      <li ng-repeat="record in chat.history track by $index">
+        {{record}}
+      </li>
+    </ul>
+  </div>
+
+  <!-- bower:js -->
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+  <!-- endbower -->
+  <script>
+  angular
+    .module('app', [])
+    .controller('ChatController', ChatController)
+    .service('ChatService', ChatService)
+    .value('history', []);
+
+  function ChatController(ChatService, history) {
+    this.ChatService = ChatService;
+    this.history = history;
+  }
+
+  ChatController.prototype.say = function(text) {
+    var ChatService = this.ChatService;
+    var history = this.history;
+    history.push('我：' + text);
+    ChatService
+      .say(text)
+      .then((result) => {
+        history.push('对方：' + result);
+      });
+  }
+
+  function ChatService($http) {
+    this.$http = $http;
+  }
+
+  ChatService.prototype.say = function(text) {
+    var $http = this.$http;
+    return $http
+      .get('/chat', {params: {text: text}})
+      .then(function(result) {
+        return result.data;
+      });
+  }
+  </script>
+</body>
+</html>
